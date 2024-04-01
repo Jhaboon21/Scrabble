@@ -1,0 +1,20 @@
+.gameBoard {
+    display: grid;
+    place-content: center;
+    padding: 10px;
+    background-color: lightgray;
+    margin: auto;
+    width: 50%;
+}
+
+.row {
+    display: flex;
+}
+
+.box {
+    background-color: lightblue;
+    border: 1px solid black;
+    padding: 10px;
+    height: 10px;
+    width: 10px;
+}

@@ -1,3 +1,6 @@
+import $ from 'jquery';
+import './Board.css'
+
 /** 
  * Create the 15x15 game board
  */

@@ -8,12 +8,12 @@ import ProfileForm from "../profiles/ProfileForm";
 import GameRoom from "../games/GameRoom";
 
 /** List of Routes */
-function RouteList({ login, signup }) {
+function RouteList({ login, signup, joinRoom, createGame }) {
     const {currentUser} = useContext(UserContext);
     return (
         <div>
             <Routes>
-                <Route path="/" element={<Homepage />} />
+                <Route path="/" element={<Homepage joinRoom={joinRoom} createGame={createGame} />} />
                 <Route path="/login" element={<LoginForm login={login} />} />
                 <Route path="/signup" element={<SignupForm signup={signup} />} />
                 

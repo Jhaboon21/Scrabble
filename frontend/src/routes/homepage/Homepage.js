@@ -5,19 +5,24 @@ import {v4 as uuid} from "uuid";
 import Alert from "../../common/Alert";
 import "./Homepage.css";
 
-function Homepage({login}) {
+function Homepage({joinRoom, createGame}) {
     const { currentUser } = useContext(UserContext);
     const [formErrors, setFormErrors] = useState([]);
     const [formData, setFormData] = useState({
-      invite: ""
+      handle: "",
+      player1: "",
+      player1Score: 0,
+      player2: null,
+      player2Score: 0
     });
     const navigate = useNavigate();
 
     async function handleSubmit(e) {
       e.preventDefault();
       try {
-        await login(formData);  
-        navigate("/game")
+        // join a game using the handle and add the current user to player2 slot
+        await joinRoom(formData.handle, currentUser.username);  
+        navigate(`/game/${formData.handle}`);
       } catch (err) {
         setFormErrors(err);
       }
@@ -28,17 +33,19 @@ function Homepage({login}) {
     setFormData(data => ({ ...data, [name]: value }));
   }
 
-  function handleCreateGame(e) {
-    //Start a game!
-    // on click, check if ...
-    // create a unique code/handle for the room
-    // create a gameroom in the database
-    // add this current player as player1 and 
-    
-
-
+  async function handleCreateGame(e) {
+    e.preventDefault();
     // Get the first 8 characters of a new id.
     const unique_id = uuid().slice(0,8);
+    formData.handle = unique_id;
+    formData.player1 = currentUser.username;
+    try {
+      // create a new game using the uuid and make current user the player1
+      await createGame(unique_id, currentUser.username, formData)
+      navigate(`/game/${unique_id}`);
+    } catch (err) {
+      setFormErrors(err);
+    }
 
   }
 
@@ -59,15 +66,21 @@ function Homepage({login}) {
               <form onSubmit={handleSubmit}>
                 <label>Enter Invite Code</label>
                 <input 
-                  name="invite"
+                  name="handle"
                   className="form-control"
-                  value={formData.invite}
+                  value={formData.handle}
                   onChange={handleChange}
                 />
                 {formErrors.length
                   ? <Alert type="danger" messages={formErrors} />
                   : null
                 }
+                <button
+                    className="btn btn-primary float-right"
+                    onSubmit={handleSubmit}
+                >
+                  Join Game
+                </button>
               </form>
               
             </div>

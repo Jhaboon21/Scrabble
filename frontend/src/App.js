@@ -13,7 +13,7 @@ export const TOKEN_STORAGE_ID = "scrabble-token";
 
 function App() {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
+  // const [isPlaying, setIsPlaying] = useState(false);
   const [currUser, setCurrUser] = useState(null);
   const [token, setToken] = useLocalStorage(TOKEN_STORAGE_ID);
 
@@ -25,12 +25,12 @@ function App() {
           ScrabbleAPI.token = token;
           let currUser = await ScrabbleAPI.getCurrentUser(username);
           setCurrUser(currUser);
-          } catch (err) {
+        } catch (err) {
           console.error("problem loading user info", err);
           setCurrUser(null);
         }
       }
-      setIsLoaded(true); 
+      setIsLoaded(true);
     }
 
     // isLoaded is set to false while getCurrentUser is running
@@ -46,13 +46,13 @@ function App() {
 
   // Handle site-wide signup
   async function signup(signupData) {
-    try{ 
+    try {
       let token = await ScrabbleAPI.signup(signupData);
       setToken(token);
       return { success: true };
     } catch (err) {
       console.error("signup failed", err);
-      return { success: false, err};
+      return { success: false, err };
     }
   }
 
@@ -64,22 +64,42 @@ function App() {
       return { success: true };
     } catch (err) {
       console.error("login failed", err);
-      return { success: false, err};
+      return { success: false, err };
     }
   }
 
+  async function joinRoom(handle, user, data) {
+    try {
+      let token = await ScrabbleAPI.joinRoom(handle, user, data);
+      setToken(token);
+      return { success: true };
+    } catch (err) {
+      console.error("Join Room failed", err);
+      return { success: false, err };
+    }
+  }
 
+  async function createGame(handle, user, data) {
+    try {
+      let token = await ScrabbleAPI.createGame(handle, user, data);
+      setToken(token);
+      return { success: true };
+    } catch (err) {
+      console.error("Create Room failed", err);
+      return { success: false, err };
+    }
+  }
 
   // while fetching data, display the loading page
   if (!isLoaded) return <LoadingSpinner />;
-  
+
   return (
     <BrowserRouter>
       <UserContext.Provider
-          value={{ currentUser: currUser, setCurrUser }}>
+        value={{ currentUser: currUser, setCurrUser }}>
         <div className="App">
           <Navigation logout={logout} />
-          <RouteList login={login} signup={signup} />
+          <RouteList login={login} signup={signup} joinRoom={joinRoom} createGame={createGame} />
         </div>
       </UserContext.Provider>
     </BrowserRouter>

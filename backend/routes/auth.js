@@ -53,7 +53,6 @@ router.post("/token", async function (req, res, next) {
         const errs = validator.errors.map(e => e.stack);
         throw new BadRequestError(errs);
       }
-  
       const newUser = await User.register({ ...req.body, isAdmin: false });
       const token = createToken(newUser);
       return res.status(201).json({ token });

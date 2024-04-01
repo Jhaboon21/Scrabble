@@ -19,6 +19,7 @@ function SignupForm({ signup }) {
   async function handleSubmit(e) {
     e.preventDefault();
     try {
+      console.log(formData)
       await signup(formData);  
       navigate("/")
     } catch (err) {
@@ -35,11 +36,6 @@ function SignupForm({ signup }) {
       email: ""
     });
   }
-
-  // function handleChange(e) {
-  //   const { name, value } = e.target;
-  //   setFormData(data => ({ ...data, [name]: value }));
-  // }
 
   const handleChange = e => {
     const { name, value } = e.target;
