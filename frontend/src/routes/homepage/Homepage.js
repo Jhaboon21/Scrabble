@@ -58,12 +58,12 @@ function Homepage({joinRoom, createGame}) {
             <div>
               <h2>Welcome Back, {currentUser.firstName || currentUser.username}!</h2>
               <button
-                className="btn btn-danger font-weight-bold text-uppercase float-right"
+                className="btn btn-danger font-weight-bold text-uppercase"
                 onClick={handleCreateGame}
               >
                 Start a Game!
               </button>
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleSubmit} className="invite-form">
                 <label>Enter Invite Code</label>
                 <input 
                   name="handle"
@@ -86,8 +86,8 @@ function Homepage({joinRoom, createGame}) {
             </div>
             )
             : (
-                <p>
-                  <Link className="btn btn-primary font-weight-bold mr-3"
+                <div>
+                  <Link className="btn btn-primary font-weight-bold mr-3" style={{margin: '5px'}}
                         to="/login">
                     Log in
                   </Link>
@@ -95,7 +95,7 @@ function Homepage({joinRoom, createGame}) {
                         to="/signup">
                     Sign up
                   </Link>
-                </p>
+                </div>
             )}
       </div>
     </div>

@@ -2,4 +2,12 @@
     height: calc(100vh - 150px);
     display: flex;
     align-items: center;
-  }
+}
+
+.invite-form {
+    margin: 50px 500px;
+}
+
+.invite-form .form-control {
+    text-align: center;
+}

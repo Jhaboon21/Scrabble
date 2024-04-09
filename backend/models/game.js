@@ -51,12 +51,13 @@ class Game {
             `SELECT player2
             FROM games
             WHERE handle = $1
-            AND player2 IS NOT NULL`,
-            [handle]
+            AND player2 IS NOT NULL
+            AND player2 != $2`,
+            [handle, player2]
         );
         // Check for if "player2" is the same as "player1"
-        if (duplicateCheck.rows[0]) throw new BadRequestError(`Duplicate user: ${player2}`);    
-        
+        if (duplicateCheck.rows[0]) return;    // player1 is just rejoining the room, don't do anything.
+
         // Check for if player2 is null
         if (nullCheck.rows[0]) throw new BadRequestError(`Cannot add user: ${player2}. Another user is in this game.`);       
 

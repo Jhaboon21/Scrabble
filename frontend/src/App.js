@@ -23,6 +23,8 @@ function App() {
         try {
           let { username } = jwt.decode(token);
           ScrabbleAPI.token = token;
+          console.log("check username token:")
+          console.log(username)
           let currUser = await ScrabbleAPI.getCurrentUser(username);
           setCurrUser(currUser);
         } catch (err) {

@@ -63,7 +63,8 @@ function LoginForm({ login }) {
                     : null}
 
                 <button
-                    className="btn btn-primary float-right"
+                    className="btn btn-primary"
+                    style={{marginTop: '5px'}}
                     onSubmit={handleSubmit}
                 >
                   Submit

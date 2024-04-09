@@ -10,7 +10,7 @@ function NavBar({logout}) {
     const {currentUser} = useContext(UserContext);
     function loggedIn() {
         return (
-            <ul className="navbar-nav">
+            <ul className="navbar-nav navbar-right">
                 <li className="navbar-item">
                     <NavLink className="nav-link" to="/games">
                         Games
@@ -32,7 +32,7 @@ function NavBar({logout}) {
 
     function loggedOut() {
         return (
-            <ul className="navbar-nav">
+            <ul className="navbar-nav navbar-right">
                 <li className="navbar-item">
                     <NavLink className="nav-link" to="/login">
                         Login

@@ -2,6 +2,38 @@
 
 /** Routes for games. */
 
+const pool = [];
+const letters = [
+  "A", "A", "A", "A", "A", "A", "A", "A", "A",
+  "B", "B",
+  "C", "C",
+  "D", "D", "D", "D",
+  "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E",
+  "F", "F",
+  "G", "G", "G",
+  "H", "H",
+  "I", "I", "I", "I", "I", "I", "I", "I", "I",
+  "J",
+  "K",
+  "L", "L", "L", "L",
+  "M", "M",
+  "N", "N", "N", "N", "N", "N",
+  "O", "O", "O", "O", "O", "O", "O", "O",
+  "P", "P",
+  "Q",
+  "R", "R", "R", "R", "R", "R",
+  "S", "S", "S", "S",
+  "T", "T", "T", "T", "T", "T",
+  "U", "U", "U", "U",
+  "V", "V",
+  "W", "W",
+  "X",
+  "Y", "Y",
+  "Z"
+];
+let player1Letters = [];
+let player2Letters = [];
+
 const jsonschema = require("jsonschema");
 
 const { ensureCorrectUserOrAdmin, ensureAdmin } = require("../middleware/auth");
@@ -14,6 +46,27 @@ const { BadRequestError } = require("../expressError");
 
 const router = express.Router();
 
+// shuffle the "bag of letters" 
+function shuffle(array) {
+  let currentIndex = array.length;
+
+  while (currentIndex !== 0) {
+    let randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+    [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+  }
+  return array;
+}
+
+// pull from the pool and give to the player letters up to max of 7.
+function drawLetters(arr) {
+  while (arr.length < 7 && pool.length > 0) {
+    let i = 7 - arr.length;
+    let addLetters = pool.splice(0, i);
+    arr.push(...addLetters);
+  }
+}
+
 /** GET /:handle => { {handle, player1, player1Score, player2, player2Score} }
  *
  * Returns info about a game with matching handle.
@@ -22,7 +75,7 @@ const router = express.Router();
 router.get("/:handle", async function (req, res, next) {
   try {
     const game = await Game.get(req.params.handle);
-    return res.json({ game });
+    return res.json({ game, pool, player1Letters, player2Letters });
   } catch (err) {
     return next(err);
   }
@@ -47,14 +100,19 @@ router.post("/:handle/user/:username", ensureCorrectUserOrAdmin, async function 
       throw new BadRequestError(errs);
     }
     const game = await Game.create(req.body);
-    return res.status(201).json({ game });
+    let shuffledLetters = shuffle(letters);
+    pool.push(...shuffledLetters);
+    drawLetters(player1Letters);
+    console.log(player1Letters)
+
+    return res.status(201).json({ game, pool, player1Letters });
   } catch (err) {
     console.log("Error at the .post");
     return next(err);
   }
 });
 
-/** PATCH /[handle]/[username]/[points] { game } => { game } 
+/** PATCH /[handle]/[username]/[points] { game } => { game, token } 
  * 
  * update points on a player's score
  * 
@@ -77,8 +135,13 @@ router.patch("/:handle/user/:username/:points", ensureCorrectUserOrAdmin, async 
 router.patch("/:handle/join/:username", ensureCorrectUserOrAdmin, async function (req, res, next) {
   try {
     const game = await Game.addSecondPlayer(req.params.handle, req.params.username);
-    const token = createToken(game);
-    return res.status(201).json({ game, token });
+    console.log(pool);
+    drawLetters(player2Letters);
+    console.log(player1Letters);
+    console.log(player2Letters);
+    console.log(pool);
+
+    return res.status(201).json({ game, pool, player2Letters });
   } catch (err) {
     return next(err);
   }

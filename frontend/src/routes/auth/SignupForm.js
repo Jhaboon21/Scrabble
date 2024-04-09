@@ -103,7 +103,7 @@ function SignupForm({ signup }) {
                   : null
               }
 
-              <button className="btn btn-primary float-right">
+              <button className="btn btn-primary" style={{marginTop: '5px'}}>
                 Submit
               </button>
             </form>

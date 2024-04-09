@@ -4,4 +4,26 @@
 
 .score_container {
     float: right;
+    margin-right: 15px;
+    text-align: center;
+}
+
+.player_score_container {
+    border: 1px solid black;
+    border-radius: 10px;
+    margin-bottom: 14px;
+    padding: 3px;
+}
+
+.letter_container {
+    margin-left: 15px;
+    text-align: left;
+}
+
+.turn_container {
+    text-align: center;
+}
+
+.turn_button { 
+    margin: 6px;
 }

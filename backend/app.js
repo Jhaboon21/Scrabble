@@ -2,6 +2,8 @@
 
 /** Express app for scrabble. */
 
+// const pool = []
+
 const express = require("express");
 const cors = require("cors");
 
