@@ -14,7 +14,15 @@
 .box {
     background-color: lightblue;
     border: 1px solid black;
-    padding: 10px;
-    height: 10px;
-    width: 10px;
+    height: 35px;
+    width: 35px;
+    align-content: center;
+}
+
+.box:hover {
+    cursor: pointer;
+}
+
+.box.active {
+    background-color: lightgoldenrodyellow;
 }

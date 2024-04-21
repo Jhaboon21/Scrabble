@@ -38,7 +38,7 @@ class ScrabbleAPI {
         try {
             return (
                 await axios({
-                    url: `api.wordnik.com/v4/word.json/${endpoint}`,
+                    url: `https://api.wordnik.com/v4/word.json/${endpoint}`,
                     method,
                     [method === "get" ? "params" : "data"]: data,
                     headers
@@ -86,8 +86,13 @@ class ScrabbleAPI {
     // Create a game with the current user as player 1
     static async createGame(handle, username, data) {
         let res = await this.requestBackend(`games/${handle}/user/${username}`, data, "post");
-        // console.log(res);
         return res.token;
+    }
+
+    // Draw letters from pool
+    static async drawLetters(handle, count) {
+        let res = await this.requestBackend(`games/${handle}/draw/${count}`);
+        return res;
     }
 
     // Add points to the current player's score
@@ -99,12 +104,12 @@ class ScrabbleAPI {
     // Join another user's game room
     static async joinRoom(handle, username, data={player2: username}) {
         let res = await this.requestBackend(`games/${handle}/join/${username}`, data, "patch");
-        return res.game;
+        return res.token;
     }
 
     // Get Scrabble score of the word
-    static async scrabbleScore(word, data) {
-        let res = await this.requestAPI(`${word}/scrabbleScore`, data, "get");
+    static async scrabbleScore(word) {
+        let res = await this.requestAPI(`${word}/scrabbleScore`);
         console.log(res);
         console.log(res.value);
         return res.value;

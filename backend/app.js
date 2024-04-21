@@ -2,18 +2,14 @@
 
 /** Express app for scrabble. */
 
-// const pool = []
-
 const express = require("express");
 const cors = require("cors");
 
 const { NotFoundError } = require("./expressError");
-
 const { authenticateJWT } = require("./middleware/auth");
 const authRoutes = require("./routes/auth");
 const usersRoutes = require("./routes/users");
 const gamesRoutes = require("./routes/games");
-
 const morgan = require("morgan");
 
 const app = express();
