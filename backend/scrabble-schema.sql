@@ -12,6 +12,6 @@ CREATE TABLE games (
     handle VARCHAR(8) PRIMARY KEY,
     player1 VARCHAR(25) NOT NULL,
     player1score INTEGER NOT NULL DEFAULT 0,
-    player2 VARCHAR(25) NOT NULL DEFAULT '',
+    player2 VARCHAR(25) DEFAULT '',
     player2score INTEGER NOT NULL DEFAULT 0
 );
