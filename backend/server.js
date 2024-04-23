@@ -13,12 +13,18 @@ wss.on('connection', socket => {
 
   // Add player to the list
   players.push(socket);
+  
 
   socket.on('message', message => {
     // Handle message from clients
     console.log('Received message', JSON.parse(message));
-    const turnData = JSON.parse(message);
-    socket.send(JSON.stringify(turnData));
+
+    // Broadcast the message to all connected clients
+    wss.clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.parse(message))
+    }
+  })
   })
 
   socket.on('close', () => {

@@ -160,7 +160,7 @@ function GameRoom() {
 
         //getPoints(findWords(grid));
         console.log('sending message!');
-        console.log(JSON.stringify(grid));
+        //console.log(JSON.stringify(grid));
         if (ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify(grid));
             console.log('message has been sent!')
@@ -229,9 +229,11 @@ function GameRoom() {
         };
         socket.onmessage = (message) => {
             // Handle messages from the server
-            console.log('got a message')
-            const data = JSON.parse(message.data);
-            handleWebSocketMessage(data);
+            console.log('msg?')
+            console.log(message);
+            console.log("data?")
+            console.log(message.data)
+            //handleWebSocketMessage(message);
         };
         socket.onclose = () => {
             console.log('Connection closed');
