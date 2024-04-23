@@ -17,8 +17,8 @@ wss.on('connection', socket => {
   socket.on('message', message => {
     // Handle message from clients
     console.log('Received message', JSON.parse(message));
-    console.log(typeof JSON.parse(message))
-    socket.send(JSON.parse(message));
+    const turnData = JSON.parse(message);
+    socket.send(JSON.stringify(turnData));
   })
 
   socket.on('close', () => {

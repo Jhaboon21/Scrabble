@@ -21,7 +21,7 @@ function GameRoom() {
     const [grid, setGrid] = useState(buildBoard());
     const [ws, setWs] = useState(null);
 
-    const socket = new WebSocket('ws://localhost:3001');
+    //const socket = new WebSocket('ws://localhost:3001');
 
     // display the player's letters
     function displayLetters(arr) {
@@ -161,8 +161,14 @@ function GameRoom() {
         //getPoints(findWords(grid));
         console.log('sending message!');
         console.log(JSON.stringify(grid));
-        socket.send(JSON.stringify(grid));
-        console.log('message has been sent!')
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify(grid));
+            console.log('message has been sent!')
+        } else {
+            console.error('WebSocket is not open.')
+        }
+        
+        
 
 
         
@@ -194,9 +200,9 @@ function GameRoom() {
     }
 
     const handleWebSocketMessage = (message) => {
-        const { payload } = message;
         console.log('another user submitted a turn, here is the socket update.')
-        setGrid(payload.grid);
+        console.log(message);
+        setGrid(message);
     }
 
     // load room and it's data, set player turn and letters
@@ -215,7 +221,8 @@ function GameRoom() {
 
     // separate useEffect for the WebSockets
     useEffect(() => {
-        //const socket = new WebSocket('ws://localhost:3001');
+        const socket = new WebSocket('ws://localhost:3001');
+
         socket.onopen = () => {
             console.log('Connected to websocket');
             setWs(socket);
