@@ -7,7 +7,7 @@ import BuildBoard from "../../game/Board";
 // import Logic from "../../game/Logic";
 import './GameRoom.css';
 
-/** Show the game room and board
+/** Show the game game and board
  * 
  * routed at /game/:handle
  */
@@ -18,10 +18,11 @@ function GameRoom() {
     const [currentTurn, setCurrentTurn] = useState(null);
     const [activeTile, setActiveTile] = useState(null);
     const [playerLetters, setPlayerLetters] = useState([]);
-    const [grid, setGrid] = useState(buildBoard());
+    const [placedLetters, setPlacedLetters] = useState([]);
+    const [lettersLeft, setLettersLeft] = useState(null);
+    const [grid, setGrid] = useState(BuildBoard());
     const [ws, setWs] = useState(null);
-
-    //const socket = new WebSocket('ws://localhost:3001');
+    const [gameState, setGameState] = useState(true); // true is active, false is game over.
 
     // display the player's letters
     function displayLetters(arr) {
@@ -31,67 +32,92 @@ function GameRoom() {
             </ul>
         )
     }
-    // build the game board
-    function buildBoard() {
-        const rows = [];
-        for (let row = 0; row < 15; row++) {
-            const boxes = [];
-            for (let col = 0; col < 15; col++) {
-                boxes.push({
-                    row,
-                    col,
-                    letter: '',
-                });
-            }
-            rows.push(boxes);
-        }
-        return rows;
+
+    // display the status of the second player
+    function displayPlayer2() {
+        if (game.player2 === null) {
+            return 'Waiting for Player';
+        } else return game.player2;
     }
 
     // traverse through grid to form words... need to work on this to traverse based on the words placed
-    const findWords = (grid) => {
-        const numRows = grid.length;
-        const numCols = grid[0].length;
+    const findWords = (playedLetters) => {
+        // Sort the played letters by row and column to ensure they are in order
+        playedLetters.sort((a, b) => a.row - b.row || a.col - b.col);
+
+        // Helper function to search for words horizontally
+        const searchHorizontal = (row, col) => {
+            let word = '';
+
+            // Search left from current position
+            for (let i = Number(col); i >= 0 && grid[row][i].letter !== ''; i--) {
+                word = grid[row][i].letter + word;
+            }
+
+            // Search left from current position
+            for (let i = Number(col) + 1; i < grid[row].length && grid[row][i].letter !== ''; i++) {
+                word += grid[row][i].letter;
+            }
+
+            return word;
+        }
+
+        // Helper function to search for words vertically
+        const searchVertical = (row, col) => {
+            let word = '';
+
+            // Search up from current position
+            for (let i = Number(row); i >= 0 && grid[i][col].letter !== ''; i--) {
+                word = grid[i][col].letter + word;
+            }
+
+            // Search down from current position
+            for (let j = Number(row) + 1; j < grid.length && grid[j][col].letter !== ''; j++) {
+                word += grid[j][col].letter;
+            }
+            return word;
+        }
         const words = [];
 
-        for (let i = 0; i < numRows; i++) {
-            let currentWord = '';
-            for (let j = 0; j < numCols; j++) {
-                // If the current tile is not empty, add its letter to the currentWord
-                if (grid[i][j].letter !== '') {
-                    currentWord += grid[i][j].letter;
-                } else {
-                    // If the word has at least 2 letters, add to the list of words
-                    if (currentWord.length > 1) {
-                        words.push(currentWord.toLowerCase());
-                    }
-                    currentWord = ''; // Reset the current word for the next sequence
-                }
+        // Check horizontally and vertically
+        placedLetters.forEach(({ row, col }) => {
+            const hWords = searchHorizontal(row, col);
+            const vWords = searchVertical(row, col);
+
+            // if the words are longer than 1 letter and not already pushed into list of words, push into list of words.
+            if (hWords !== '' && hWords.length > 1 && !words.includes(hWords.toLowerCase())) {
+                words.push(hWords.toLowerCase());
             }
-            // If at the last tile of the row, add word if not empty.
-            if (currentWord.length > 1) {
-                words.push(currentWord.toLowerCase());
+            if (vWords !== '' && vWords.length > 1 && !words.includes(vWords.toLowerCase())) {
+                words.push(vWords.toLowerCase());
             }
-        }
-        console.log(words)
+        })
         return words;
-    };
+    }
 
     async function getPoints(arr) {
         let score = 0;
         for (let i = 0; i < arr.length; i++) {
-            let res = await ScrabbleAPI.scrabbleScore(arr[i]);
-            if (res.statusCode === 200) {
-                console.log(res.value)
-                score += res.value;
+            try {
+                let res = await ScrabbleAPI.scrabbleScore(arr[i]);
+                score += res.data.value;
+            } catch (error) {
+                throw new Error(`The word ${arr[i]} is not valid.`);
             }
         }
-        console.log(score);
         // update the backend
-        if (currentTurn === game.game.player1) {
-            game.game.player1score += score;
+        if (currentTurn === game.player1) {
+            let res = await ScrabbleAPI.addPoints(handle, currentTurn, score)
+            ws.send(JSON.stringify({
+                type: 'game',
+                content: res
+            }))
         } else {
-            game.game.player2score += score;
+            let res = await ScrabbleAPI.addPoints(handle, currentTurn, score)
+            ws.send(JSON.stringify({
+                type: 'game',
+                content: res
+            }))
         }
     }
 
@@ -123,26 +149,26 @@ function GameRoom() {
             // if the spot on the board is empty, put tile inside
             if (boardTile.innerHTML === "") {
                 boardTile.classList.toggle('active')
-                //console.log(boardTile); // this can be later saved/used to string together letters
                 boardTile.innerHTML = activeTile
 
                 let ele = document.querySelector('.tiles.selected');
                 ele.classList.toggle('selected')    // make it unselected
-                // then get the game.player1Letters that match the value and remove
 
-                if (currentTurn === game.game.player1) {
-                    let index = playerLetters.indexOf(ele.innerHTML);
-                    if (index > -1) playerLetters.splice(index, 1);
+                // Remove the letter from the player's hand
+                let index = playerLetters.indexOf(ele.innerHTML);
+                if (index > -1) {
+                    playerLetters.splice(index, 1);
                 }
 
                 const newGrid = [...grid]
                 newGrid[boardTile.dataset.row][boardTile.dataset.col].letter = activeTile;
                 setGrid(newGrid);
+                setPlacedLetters([...placedLetters, { row: boardTile.dataset.row, col: boardTile.dataset.col }])
                 setActiveTile(null);
             }
             // else if spot has a tile that was placed on this turn, or if spot alread has a tile, return for now*
             else {
-                console.log("there is something here already."); // COME BACK and add more functionality later. *return the tile or switch tiles. or make it so you can't click on finished tiles
+                console.log("there is something here already.");                        // COME BACK and add more functionality later. *return the tile or switch tiles. or make it so you can't click on finished tiles
                 return;
             }
         }
@@ -150,73 +176,177 @@ function GameRoom() {
 
     // pressing the 'Submit Turn' button will verify and solidify the played letters and switch to next player's turn
     async function handleTurn(e) {
-        e.preventDefault();        
+        e.preventDefault();
         if (currentTurn !== currentUser.username) return; //Not Your Turn!
 
-        console.log("You've submitted your turn!")
+        // use placed letters to findWords. it will return an array of words then get points using that array.
+        const words = findWords(placedLetters);
 
+        try {
+            // then use those words to try and get the points for them.
+            await getPoints(words);
+        } catch (err) {
+            // if words are invalid, remove from grid and add back to player hand.
+            const newGrid = [...grid];
+            placedLetters.forEach(({ row, col }) => {
+                let element = document.querySelector(`[data-row="${row}"][data-col="${col}"]`)
+                element.classList.toggle('active');
+                setPlayerLetters(l => [...l, grid[row][col].letter]);
+                newGrid[row][col].letter = '';
+                setGrid(newGrid);                
+            })
+            alert(err.message);
+            return;
+        }
+        
+        // draw and set letters for the player
         let letters = await ScrabbleAPI.drawLetters(handle, 7 - playerLetters.length);
         setPlayerLetters(l => [...l, ...letters.cards])
-
-        //getPoints(findWords(grid));
-        console.log('sending message!');
-        //console.log(JSON.stringify(grid));
+        setLettersLeft(letters.num);
+        
+        // send msg to backend with grid to update the other player's grid
         if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify(grid));
+            ws.send(JSON.stringify({
+                type: 'grid',
+                content: grid
+            }));
             console.log('message has been sent!')
         } else {
             console.error('WebSocket is not open.')
         }
-        
-        
-
-
-        
-        if (currentTurn === game.game.player1) {
-            console.log("current turn is player1, now switching to 2");
-            setCurrentTurn(game.game.player2);
-            console.log("new turn started: " + currentTurn)
-        }
-        else if (currentTurn === game.game.player2) {
-            console.log("current turn is player2, now switching to 1");
-            setCurrentTurn(game.game.player1);
-            console.log("new turn started: " + currentTurn)
-        }
-
+        setPlacedLetters([]);
+        setTurn(game)
     }
 
     // This should remove any played letters in this turn, and change the current turn to the other player.
     function handlePass(e) {
         e.preventDefault();
-        console.log("you passed your turn.");
-        if (currentTurn === game.game.player1) {
-            setCurrentTurn(game.game.player2);
-            console.log("new turn started: " + currentTurn)
+
+        const newGrid = [...grid];
+        placedLetters.forEach(({ row, col }) => {
+            let element = document.querySelector(`[data-row="${row}"][data-col="${col}"]`)
+            element.classList.toggle('active');
+            setPlayerLetters(l => [...l, grid[row][col].letter]);
+            newGrid[row][col].letter = '';
+            setGrid(newGrid);
+        })
+        setPlacedLetters([]);
+        setTurn(game)
+    }
+
+    // handle what happens when pressing the End Game button
+    function endGame(e) {
+        e.preventDefault();
+        
+        // Only the user with the current turn can decide if they want to end the game.
+        if (currentTurn === currentUser.username) {
+            if (!gameState) { // Current user has received a request to end and has decided to confirm the end. Send another WebSocket message to let both know that it is offically done.          
+                let winner = game.player1score > game.player2score
+                                ? game.player1
+                                : game.player1score < game.player2score
+                                ? game.player2
+                                : 'tie';
+                
+                ws.send(JSON.stringify({
+                    type: 'finish',
+                    content: winner
+                }));
+            } else { // No one has requested to end yet, so initial request will be sent to other player.
+                console.log('sending a request to other player to end game');
+                setTurn(game)
+                ws.send(JSON.stringify({
+                    type: 'end',
+                    content: 'Received request to end game.'
+                }))
+            }
+        }    
+    }
+
+    // The game is finished so we should declare the winner and hide the turn buttons.
+    function winner(msg) {
+        if (msg === 'tie') {
+            alert('It is a tie!');
+            let ele = document.querySelectorAll('.player_score_container');
+            ele.classList.toggle('winner');
+        } else {
+            alert(`The winner is: ${msg}!!!`);
+            let ele = document.querySelector(`#${msg}`);
+            ele.classList.toggle('winner');
         }
-        else if (currentTurn === game.game.player2) {
-            setCurrentTurn(game.game.player1);
-            console.log("new turn started: " + currentTurn)
+
+        let turnEle = document.querySelector('.turn_container');
+        turnEle.classList.toggle('hidden')
+    }
+
+    // Handle the different type of messages that the client might receive from the websocket
+    async function handleWebSocketMessage(message) {
+        switch (message.type) {
+            case 'system':
+                // A user has joined and should update the lobby
+                console.log(message.content)
+                const game = await ScrabbleAPI.getGameRoom(handle);
+                setCurrentTurn(game.player1);
+                setGame(game);
+                break;
+            case 'board':
+                // a user has submitted a turn, so we should update the board
+                setGrid(message.content);
+                break;
+            case 'turn':
+                // also adjust the player turns
+                setCurrentTurn(message.content);
+                // if player had previously tried to end game, but other person wants to keep going, set gameState to true.
+                setGameState(true);
+                break;
+            case 'game':
+                // update the board for both players
+                setGame(message.content);
+                break;
+            case 'end':
+                // notify user that other user wants to end the game
+                console.log(message.content);
+                if (currentTurn === currentUser.username){ 
+                    alert('Other player is requesting to end the game.');           // this alert doesn't happen because currentTurn/user is undefined. maybe need to pass the turn/user in the message.content
+                }                
+                setGameState(false);
+                break;
+            case 'finish':
+                // Both users have confirmed to end the game.
+                console.log(message.content);
+                setPlayerLetters([])
+                winner(message.content);
+                break;
         }
     }
 
-    const handleWebSocketMessage = (message) => {
-        console.log('another user submitted a turn, here is the socket update.')
-        console.log(message);
-        setGrid(message);
+    // determine and set the next player's turn.
+    const setTurn = (game) => {
+        if (currentTurn === game.player1) {
+            console.log("current turn is player1, now switching to 2");
+            ws.send(JSON.stringify({
+                type: 'turn',
+                content: game.player2
+            }))
+        }
+        else if (currentTurn === game.player2) {
+            console.log("current turn is player2, now switching to 1");
+            ws.send(JSON.stringify({
+                type: 'turn',
+                content: game.player1
+            }))
+        }
     }
 
-    // load room and it's data, set player turn and letters
+    // load game and it's data, set player letters
     useEffect(function loadGameRoom() {
         async function getGameRoom() {
             const game = await ScrabbleAPI.getGameRoom(handle);
             let letters = await ScrabbleAPI.drawLetters(handle, 7) // draw 7 letters
-            setCurrentTurn(game.game.player1);
             setPlayerLetters(letters.cards);
-            console.log(game);
+            setLettersLeft(letters.num);
             setGame(game);
-            //BuildBoard();
         }
-        getGameRoom();        
+        getGameRoom();
     }, [handle]);
 
     // separate useEffect for the WebSockets
@@ -229,11 +359,7 @@ function GameRoom() {
         };
         socket.onmessage = (message) => {
             // Handle messages from the server
-            console.log('msg?')
-            console.log(message);
-            console.log("data?")
-            console.log(message.data)
-            //handleWebSocketMessage(message);
+            handleWebSocketMessage(JSON.parse(message.data));
         };
         socket.onclose = () => {
             console.log('Connection closed');
@@ -246,9 +372,11 @@ function GameRoom() {
 
     return (
         <div className="GameRoom">
-            {game.game.player2 === null
+            {game.player2 === null
                 ? <div> Here is the invite code: {handle} </div>
-                : <div> Let's Play! It is currently {currentTurn}'s turn!</div>
+                : gameState === true
+                ? <div> Let's Play! It is currently <b>{currentTurn}'s</b> turn!</div>
+                : <div> The other player is asking to End the game. Select '<b>End Game</b>' to confirm the end or continue to place letters and '<b>Submit Turn</b>' to continue playing. </div>
             }
             <div className="gameBoard">
                 {grid.map((row, rowIndex) => (
@@ -276,21 +404,22 @@ function GameRoom() {
                 <div className="turn_container">
                     <button id="move" className="turn_button" title="set_letters" onClick={handleTurn}>Submit Turn</button>
                     <button id="pass" className="turn_button" onClick={handlePass}>Pass Turn</button>
+                    <button id="end" className="turn_button" onClick={endGame}>End Game</button>
                 </div>
 
 
                 <div className="score_container">
                     <h3>SCORE</h3>
-                    <div className="player_score_container">
-                        <div className="player_name">{game.game.player1} (Player 1)</div>
-                        <div className="player_1_points">{game.game.player1score}</div>
+                    <div className="player_score_container p1" id={game.player1}>
+                        <div className="player_name">{game.player1} (Player 1)</div>
+                        <div className="player_1_points">{game.player1score}</div>
                     </div>
-                    <div className="player_score_container">
-                        <div className="player_name">{game.game.player2 == null ? ("Waiting for Player") : game.game.player2} (Player 2)</div>
-                        <div className="player_2_points">{game.game.player2score}</div>
+                    <div className="player_score_container p2" id={game.player2}>
+                        <div className="player_name">{displayPlayer2()} (Player 2)</div>
+                        <div className="player_2_points">{game.player2score}</div>
                     </div>
 
-                    {/* <div className="letters_left"><span id="letters_left">Total Letters Left: <b>{game.pool.length}</b></span></div> */}
+                    <div className="letters_left"><span id="letters_left">Total Letters Left: <b>{lettersLeft}</b></span></div>
                 </div>
             </div>
         </div>

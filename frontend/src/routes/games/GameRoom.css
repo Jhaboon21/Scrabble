@@ -15,6 +15,10 @@
     padding: 3px;
 }
 
+.player_score_container.winner {
+    background-color: lightgreen;
+}
+
 .letter_container {
     margin-left: 15px;
     text-align: left;
@@ -56,4 +60,8 @@
 
 .turn_button { 
     margin: 6px;
+}
+
+#end {
+    background-color: indianred;
 }

@@ -37,7 +37,8 @@ router.get("/:handle", async function (req, res, next) {
 router.get("/:handle/draw/:count", async function (req, res, next) {
   try {
     const { count } = req.params;
-    const deck = pool.getLetters();
+    const deck = pool.getLetters();    
+    let num = 0;
     if (deck) {
       const drawn = [];
       for (let i = 0; i < count; i++) {
@@ -48,8 +49,10 @@ router.get("/:handle/draw/:count", async function (req, res, next) {
           break; // deck is empty
         }
       }
+      num = deck.letters.length
+      console.log(deck.letters.length);
       pool.returnLetters(deck);
-      return res.json({ cards: drawn });
+      return res.json({ cards: drawn , num: num });
     }
   } catch (err) {
     return next(err);
@@ -96,8 +99,8 @@ router.post("/:handle/user/:username", ensureCorrectUserOrAdmin, async function 
 router.patch("/:handle/user/:username/:points", ensureCorrectUserOrAdmin, async function (req, res, next) {
   try {
     const game = await Game.addPoints(req.params.handle, req.params.username, req.params.points)
-    const token = createToken(game);
-    return res.status(201).json({ game, token });
+    //const token = createToken(game);
+    return res.status(201).json({ game });
   } catch (err) {
     return next(err);
   }

@@ -37,6 +37,7 @@
     ]
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^12.1.2",
     "@types/jquery": "^3.5.29"
   }

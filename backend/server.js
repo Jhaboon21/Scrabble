@@ -13,18 +13,21 @@ wss.on('connection', socket => {
 
   // Add player to the list
   players.push(socket);
-  
+  wss.clients.forEach(client => {
+    if (client !== socket && client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify({
+        type: 'system',
+        content: 'A new user has joined the room'
+      }))
+    }
+  })
+
 
   socket.on('message', message => {
     // Handle message from clients
-    console.log('Received message', JSON.parse(message));
+    // console.log('Received message', JSON.parse(message));
 
-    // Broadcast the message to all connected clients
-    wss.clients.forEach(client => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.parse(message))
-    }
-  })
+    handleMessage(JSON.parse(message));
   })
 
   socket.on('close', () => {
@@ -34,12 +37,78 @@ wss.on('connection', socket => {
   })
 })
 
+function handleMessage(message) {
+  switch (message.type) {
+    case 'grid':
+      // Broadcast the message to all connected clients
+      wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({
+            type: 'board',
+            content: message.content
+          }))
+        } else {
+          console.error('WebSocket connection is not open.');
+        }
+      })
+      break;
+    case 'turn':
+      wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({
+            type: 'turn',
+            content: message.content
+          }))
+        } else {
+          console.error('WebSocket connection is not open.');
+        }
+      })
+      break;
+    case 'game':
+      wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({
+            type: 'game',
+            content: message.content
+          }))
+        } else {
+          console.error('WebSocket connection is not open.');
+        }
+      })
+      break;
+    case 'end':
+      wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({
+            type: 'end',
+            content: message.content
+          }))
+        } else {
+          console.error('WebSocket connection is not open');
+        }
+      })
+      break;
+    case 'finish':
+      wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({
+            type: 'finish',
+            content: message.content
+          }))
+        } else {
+          console.error('WebSocket connection is not open');
+        }
+      })
+      break;
+  }
+}
+
 app.server = app.listen(PORT, function () {
-    console.log(`Started on http://localhost:${PORT}`);
+  console.log(`Started on http://localhost:${PORT}`);
 });
 
 app.server.on('upgrade', (request, socket, head) => {
-    wss.handleUpgrade(request, socket, head, (ws) => {
-        wss.emit('connection', ws, request);
-    })
+  wss.handleUpgrade(request, socket, head, (ws) => {
+    wss.emit('connection', ws, request);
+  })
 })

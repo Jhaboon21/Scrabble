@@ -1,0 +1,48 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`matches snapshot 1`] = `
+<DocumentFragment>
+  <div>
+    <div
+      class="Homepage"
+    >
+      <div
+        class="container text-center"
+      >
+        <h1
+          class="mb-4 font-weight-bold"
+        >
+          Let's Play Scrabble!
+        </h1>
+        <div>
+          <h2>
+            Welcome Back, testuser!
+          </h2>
+          <button
+            class="btn btn-danger font-weight-bold text-uppercase"
+          >
+            Start a Game!
+          </button>
+          <form
+            class="invite-form"
+          >
+            <label>
+              Enter Invite Code
+            </label>
+            <input
+              class="form-control"
+              name="handle"
+              value=""
+            />
+            <button
+              class="btn btn-primary float-right"
+            >
+              Join Game
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;

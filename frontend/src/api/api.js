@@ -10,7 +10,7 @@ class ScrabbleAPI {
     // token for interacting with the API will be stored here.
     static token;
     // hardcoded api key for testing
-    static apiKey = "";
+    static apiKey = "7h54gfi4lua9gj24ze04flf4mb3cbi0pdieaer0qb27us90ek";
 
     static async requestBackend(endpoint, data = {}, method = "get") {
         console.log("API Call:", endpoint, data, method);
@@ -34,16 +34,14 @@ class ScrabbleAPI {
 
     static async requestAPI(endpoint, data = {}, method = "get") {
         console.log("Wordnik API Call:", endpoint, data, method);
-        const headers = { Authorization: `Bearer ${ScrabbleAPI.apiKey}` }
         try {
             return (
                 await axios({
-                    url: `https://api.wordnik.com/v4/word.json/${endpoint}`,
+                    url: `https://api.wordnik.com/v4/word.json/${endpoint}?api_key=${ScrabbleAPI.apiKey}`,
                     method,
                     [method === "get" ? "params" : "data"]: data,
-                    headers
                 })
-            ).data;
+            );
         } catch (err) {
             console.error("API Error:", err.response);
             let message = err.response.data.error.message;
@@ -80,7 +78,7 @@ class ScrabbleAPI {
     // Get the game room
     static async getGameRoom(handle) {
         let res = await this.requestBackend(`games/${handle}`);
-        return res;
+        return res.game;
     }
 
     // Create a game with the current user as player 1
@@ -96,9 +94,9 @@ class ScrabbleAPI {
     }
 
     // Add points to the current player's score
-    static async addPoints(handle, username, points, data) {
+    static async addPoints(handle, username, points, data={}) {
         let res = await this.requestBackend(`games/${handle}/user/${username}/${points}`, data, "patch");
-        return res.token;
+        return res.game;
     }
 
     // Join another user's game room
@@ -110,9 +108,7 @@ class ScrabbleAPI {
     // Get Scrabble score of the word
     static async scrabbleScore(word) {
         let res = await this.requestAPI(`${word}/scrabbleScore`);
-        console.log(res);
-        console.log(res.value);
-        return res.value;
+        return res;
     }
 }
 

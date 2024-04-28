@@ -1,17 +1,16 @@
 Things I need to do:
-create a gameboard - rows/columns
-create a 'letter bag' - should hold ~100 tiles? likely predetermined so the game can end when players run out of letters. should hold certain number of each letter.
-should also 'shuffle' or give random letters out to the players
-determine whose turn it is
-on turn load, distribute letters to players(7).
-on turn, players must put down 2 or more to form a valid word.
-player must submit their letters on the board to be checked
-if word is 1 letter, or invalid, flash warning and return letter to hand.
-on next turn, keep the unplayed letters and refill to max(7).
-keep track of each player's score using the api.
-if not the current player's turn, do not allow them to place letters on board.
-players should only view their own hand.
-on game end, determine who has the most points and delcare them the winner.
+display rules/conditions and how to end the game.
+
+
+make tests.
+
+additional: add stricter conditions on how to place tiles: must start in the middle? must be connecting to other placed tiles.
+add bonus point spots. add how many points a letter would be.
+the 'Games' tab on top does not do anything yet. could add a way to save the game and come back to it later.
+
+some issues:
+when passing a turn and there are letters on board, the last letter will still be there. but goes away after clicking something.
+when updating the grid for the other person, the letters that they receive, are not "active" they don't turn yellow and stay blue.
 
 
 # Getting Started with Create React App

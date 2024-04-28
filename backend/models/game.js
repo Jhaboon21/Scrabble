@@ -80,6 +80,7 @@ class Game {
      * Throws NotFoundError if player not found 
      */
     static async addPoints(handle, player, points) {
+        let newPoints = 0;
         const addPlayer1 = await db.query(
             `SELECT player1Score
             FROM games
@@ -87,24 +88,37 @@ class Game {
             AND player1 = $2`,
             [handle, player]
         );
-        console.log("first check");
-        console.log(addPlayer1);
-        console.log("second check with .rows[0]");
-        console.log(addPlayer1.rows[0]);
-        let newPoints = addPlayer1 + points;
-        console.log(newPoints);
+        if (addPlayer1.rows[0]) {
+            newPoints = addPlayer1.rows[0].player1score + Number(points);
+        }
+        
+        console.log(newPoints)
+        if (!addPlayer1.rows[0]) {
+            console.log('second check');
+            const addPlayer2 = await db.query(
+                `SELECT player2Score
+                FROM games
+                WHERE handle = $1
+                AND player2 = $2`,
+                [handle, player]
+            );
+            
+            newPoints = addPlayer2.rows[0].player2score + Number(points);
+            console.log(newPoints)
+        }
+        console.log(newPoints)
+        
         const result = await db.query(
             `UPDATE games
-            SET player1Score = $1
+            SET player1Score = (CASE WHEN player1 = $3 THEN $1 ELSE player1Score END),
+                player2Score = (CASE WHEN player2 = $3 THEN $1 ELSE player2Score END)
             WHERE handle = $2
             RETURNING handle, player1, player1Score, player2, player2Score`,
-            [newPoints, handle]
+            [newPoints, handle, player]
         );
         const game = result.rows[0];
         return game;
     }
-
-
 
     /** Given a game handle, return data about game.
      * 

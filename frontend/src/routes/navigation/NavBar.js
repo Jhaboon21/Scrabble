@@ -11,11 +11,11 @@ function NavBar({logout}) {
     function loggedIn() {
         return (
             <ul className="navbar-nav navbar-right">
-                <li className="navbar-item">
+                {/* <li className="navbar-item">
                     <NavLink className="nav-link" to="/games">
                         Games
                     </NavLink>
-                </li>
+                </li> */}
                 <li className="navbar-item">
                     <NavLink className="nav-link" to="/profile">
                         Profile
