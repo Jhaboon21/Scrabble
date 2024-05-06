@@ -3,9 +3,9 @@ import UserContext from "./routes/auth/UserContext";
 
 const demoUser = {
   username: "testuser",
-  first_name: "testfirst",
-  last_name: "testlast",
-  email: "test@test.net",
+  first_name: "John",
+  last_name: "Doe",
+  email: "test@email.com",
   photo_url: null,
 };
 

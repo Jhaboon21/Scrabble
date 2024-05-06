@@ -25,11 +25,14 @@ exports[`matches snapshot 1`] = `
         <form
           class="invite-form"
         >
-          <label>
+          <label
+            for="handle"
+          >
             Enter Invite Code
           </label>
           <input
             class="form-control"
+            id="handle"
             name="handle"
             value=""
           />

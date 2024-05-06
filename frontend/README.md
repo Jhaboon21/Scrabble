@@ -1,16 +1,8 @@
-Things I need to do:
-display rules/conditions and how to end the game.
-
-
-make tests.
-
-additional: add stricter conditions on how to place tiles: must start in the middle? must be connecting to other placed tiles.
-add bonus point spots. add how many points a letter would be.
-the 'Games' tab on top does not do anything yet. could add a way to save the game and come back to it later.
+host database online. host application online(render).
 
 some issues:
-when passing a turn and there are letters on board, the last letter will still be there. but goes away after clicking something.
 when updating the grid for the other person, the letters that they receive, are not "active" they don't turn yellow and stay blue.
+the pool seems strange. only 1 pool is made and is shared through the other game rooms instead of making a new pool for the other rooms.
 
 
 # Getting Started with Create React App

@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useParams } from "react-router-dom";
+import { useWebSocket, useWebSocketMessage } from "../../hooks/useWebSocket";
 import ScrabbleAPI from "../../api/api";
 import UserContext from "../auth/UserContext";
 import LoadingSpinner from "../../common/LoadingSpinner";
 import BuildBoard from "../../game/Board";
-// import Logic from "../../game/Logic";
+import { findWords, getPoints, winner } from "../../game/Logic";
 import './GameRoom.css';
 
 /** Show the game game and board
@@ -21,11 +22,12 @@ function GameRoom() {
     const [placedLetters, setPlacedLetters] = useState([]);
     const [lettersLeft, setLettersLeft] = useState(null);
     const [grid, setGrid] = useState(BuildBoard());
-    const [ws, setWs] = useState(null);
+    const ws = useWebSocket('ws://localhost:3001')
     const [gameState, setGameState] = useState(true); // true is active, false is game over.
 
     // display the player's letters
     function displayLetters(arr) {
+        console.log(arr);
         return (
             <ul className="player_letters">
                 {arr.map((val, index) => <li className="tiles" key={index} onClick={handleTile} value={val}>{val}</li>)}
@@ -38,87 +40,6 @@ function GameRoom() {
         if (game.player2 === null) {
             return 'Waiting for Player';
         } else return game.player2;
-    }
-
-    // traverse through grid to form words... need to work on this to traverse based on the words placed
-    const findWords = (playedLetters) => {
-        // Sort the played letters by row and column to ensure they are in order
-        playedLetters.sort((a, b) => a.row - b.row || a.col - b.col);
-
-        // Helper function to search for words horizontally
-        const searchHorizontal = (row, col) => {
-            let word = '';
-
-            // Search left from current position
-            for (let i = Number(col); i >= 0 && grid[row][i].letter !== ''; i--) {
-                word = grid[row][i].letter + word;
-            }
-
-            // Search left from current position
-            for (let i = Number(col) + 1; i < grid[row].length && grid[row][i].letter !== ''; i++) {
-                word += grid[row][i].letter;
-            }
-
-            return word;
-        }
-
-        // Helper function to search for words vertically
-        const searchVertical = (row, col) => {
-            let word = '';
-
-            // Search up from current position
-            for (let i = Number(row); i >= 0 && grid[i][col].letter !== ''; i--) {
-                word = grid[i][col].letter + word;
-            }
-
-            // Search down from current position
-            for (let j = Number(row) + 1; j < grid.length && grid[j][col].letter !== ''; j++) {
-                word += grid[j][col].letter;
-            }
-            return word;
-        }
-        const words = [];
-
-        // Check horizontally and vertically
-        placedLetters.forEach(({ row, col }) => {
-            const hWords = searchHorizontal(row, col);
-            const vWords = searchVertical(row, col);
-
-            // if the words are longer than 1 letter and not already pushed into list of words, push into list of words.
-            if (hWords !== '' && hWords.length > 1 && !words.includes(hWords.toLowerCase())) {
-                words.push(hWords.toLowerCase());
-            }
-            if (vWords !== '' && vWords.length > 1 && !words.includes(vWords.toLowerCase())) {
-                words.push(vWords.toLowerCase());
-            }
-        })
-        return words;
-    }
-
-    async function getPoints(arr) {
-        let score = 0;
-        for (let i = 0; i < arr.length; i++) {
-            try {
-                let res = await ScrabbleAPI.scrabbleScore(arr[i]);
-                score += res.data.value;
-            } catch (error) {
-                throw new Error(`The word ${arr[i]} is not valid.`);
-            }
-        }
-        // update the backend
-        if (currentTurn === game.player1) {
-            let res = await ScrabbleAPI.addPoints(handle, currentTurn, score)
-            ws.send(JSON.stringify({
-                type: 'game',
-                content: res
-            }))
-        } else {
-            let res = await ScrabbleAPI.addPoints(handle, currentTurn, score)
-            ws.send(JSON.stringify({
-                type: 'game',
-                content: res
-            }))
-        }
     }
 
     // handles what happens when a player clicks on a playable letter
@@ -180,30 +101,52 @@ function GameRoom() {
         if (currentTurn !== currentUser.username) return; //Not Your Turn!
 
         // use placed letters to findWords. it will return an array of words then get points using that array.
-        const words = findWords(placedLetters);
+        const words = findWords(grid, placedLetters);
 
         try {
             // then use those words to try and get the points for them.
-            await getPoints(words);
+            let score = await getPoints(words);
+            if (score > 0) {
+                // update the backend and update score for both players
+                if (currentTurn === game.player1) {
+                    let res = await ScrabbleAPI.addPoints(handle, currentTurn, score)
+                    ws.send(JSON.stringify({
+                        type: 'game',
+                        content: res
+                    }))
+                } else {
+                    let res = await ScrabbleAPI.addPoints(handle, currentTurn, score)
+                    ws.send(JSON.stringify({
+                        type: 'game',
+                        content: res
+                    }))
+                }
+            }
         } catch (err) {
             // if words are invalid, remove from grid and add back to player hand.
             const newGrid = [...grid];
             placedLetters.forEach(({ row, col }) => {
-                let element = document.querySelector(`[data-row="${row}"][data-col="${col}"]`)
-                element.classList.toggle('active');
-                setPlayerLetters(l => [...l, grid[row][col].letter]);
-                newGrid[row][col].letter = '';
-                setGrid(newGrid);                
+                async function putBackLetters() {
+                    let element = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                    if (element) {
+                        element.classList.toggle('active');
+                        await setPlayerLetters((l => [...l, grid[row][col].letter]));       // awaiting here to try and get the setState to finish the update before rendering
+                        newGrid[row][col].letter = '';
+                        await setGrid(newGrid);
+                    }
+                }
+                putBackLetters();
             })
             alert(err.message);
+            setPlacedLetters([]);
             return;
         }
-        
+
         // draw and set letters for the player
         let letters = await ScrabbleAPI.drawLetters(handle, 7 - playerLetters.length);
         setPlayerLetters(l => [...l, ...letters.cards])
         setLettersLeft(letters.num);
-        
+
         // send msg to backend with grid to update the other player's grid
         if (ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({
@@ -223,12 +166,17 @@ function GameRoom() {
         e.preventDefault();
 
         const newGrid = [...grid];
-        placedLetters.forEach(({ row, col }) => {
-            let element = document.querySelector(`[data-row="${row}"][data-col="${col}"]`)
-            element.classList.toggle('active');
-            setPlayerLetters(l => [...l, grid[row][col].letter]);
-            newGrid[row][col].letter = '';
-            setGrid(newGrid);
+        placedLetters.forEach(async ({ row, col }) => {
+            async function putBackLetters() {
+                let element = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                if (element) {
+                    element.classList.toggle('active');
+                    await setPlayerLetters(l => [...l, grid[row][col].letter])          // awaiting here to try and get the setState to finish the update before rendering
+                    newGrid[row][col].letter = '';
+                    await setGrid(newGrid);
+                }
+            }
+            putBackLetters();
         })
         setPlacedLetters([]);
         setTurn(game)
@@ -237,16 +185,16 @@ function GameRoom() {
     // handle what happens when pressing the End Game button
     function endGame(e) {
         e.preventDefault();
-        
+
         // Only the user with the current turn can decide if they want to end the game.
         if (currentTurn === currentUser.username) {
             if (!gameState) { // Current user has received a request to end and has decided to confirm the end. Send another WebSocket message to let both know that it is offically done.          
                 let winner = game.player1score > game.player2score
-                                ? game.player1
-                                : game.player1score < game.player2score
-                                ? game.player2
-                                : 'tie';
-                
+                    ? game.player1
+                    : game.player1score < game.player2score
+                        ? game.player2
+                        : 'tie';
+
                 ws.send(JSON.stringify({
                     type: 'finish',
                     content: winner
@@ -259,63 +207,6 @@ function GameRoom() {
                     content: 'Received request to end game.'
                 }))
             }
-        }    
-    }
-
-    // The game is finished so we should declare the winner and hide the turn buttons.
-    function winner(msg) {
-        if (msg === 'tie') {
-            alert('It is a tie!');
-            let ele = document.querySelectorAll('.player_score_container');
-            ele.classList.toggle('winner');
-        } else {
-            alert(`The winner is: ${msg}!!!`);
-            let ele = document.querySelector(`#${msg}`);
-            ele.classList.toggle('winner');
-        }
-
-        let turnEle = document.querySelector('.turn_container');
-        turnEle.classList.toggle('hidden')
-    }
-
-    // Handle the different type of messages that the client might receive from the websocket
-    async function handleWebSocketMessage(message) {
-        switch (message.type) {
-            case 'system':
-                // A user has joined and should update the lobby
-                console.log(message.content)
-                const game = await ScrabbleAPI.getGameRoom(handle);
-                setCurrentTurn(game.player1);
-                setGame(game);
-                break;
-            case 'board':
-                // a user has submitted a turn, so we should update the board
-                setGrid(message.content);
-                break;
-            case 'turn':
-                // also adjust the player turns
-                setCurrentTurn(message.content);
-                // if player had previously tried to end game, but other person wants to keep going, set gameState to true.
-                setGameState(true);
-                break;
-            case 'game':
-                // update the board for both players
-                setGame(message.content);
-                break;
-            case 'end':
-                // notify user that other user wants to end the game
-                console.log(message.content);
-                if (currentTurn === currentUser.username){ 
-                    alert('Other player is requesting to end the game.');           // this alert doesn't happen because currentTurn/user is undefined. maybe need to pass the turn/user in the message.content
-                }                
-                setGameState(false);
-                break;
-            case 'finish':
-                // Both users have confirmed to end the game.
-                console.log(message.content);
-                setPlayerLetters([])
-                winner(message.content);
-                break;
         }
     }
 
@@ -349,23 +240,46 @@ function GameRoom() {
         getGameRoom();
     }, [handle]);
 
-    // separate useEffect for the WebSockets
-    useEffect(() => {
-        const socket = new WebSocket('ws://localhost:3001');
-
-        socket.onopen = () => {
-            console.log('Connected to websocket');
-            setWs(socket);
-        };
-        socket.onmessage = (message) => {
-            // Handle messages from the server
-            handleWebSocketMessage(JSON.parse(message.data));
-        };
-        socket.onclose = () => {
-            console.log('Connection closed');
-        };
-        return () => socket.close();
-    }, []);
+    // Handle the different type of messages that the client might receive from the websocket       
+    useWebSocketMessage(ws, async (message) => {
+        switch (message.type) {
+            case 'system':
+                // A user has joined and should update the lobby
+                console.log(message.content)
+                const game = await ScrabbleAPI.getGameRoom(handle);
+                setCurrentTurn(game.player1);
+                setGame(game);
+                break;
+            case 'board':
+                // a user has submitted a turn, so we should update the board
+                setGrid(message.content);
+                break;
+            case 'turn':
+                // also adjust the player turns
+                setCurrentTurn(message.content);
+                // if player had previously tried to end game, but other person wants to keep going, set gameState to true.
+                setGameState(true);
+                break;
+            case 'game':
+                // update the board for both players
+                setGame(message.content);
+                break;
+            case 'end':
+                // notify user that other user wants to end the game
+                console.log(message.content);
+                if (currentTurn === currentUser.username) {
+                    alert('Other player is requesting to end the game.');           // this alert doesn't happen because currentTurn/user is undefined. maybe need to pass the turn/user in the message.content
+                }
+                setGameState(false);
+                break;
+            case 'finish':
+                // Both users have confirmed to end the game.
+                console.log(message.content);
+                setPlayerLetters([])
+                winner(message.content);
+                break;
+        }
+    });
 
     // while waiting for game to load, display loading spinner
     if (!game) return <LoadingSpinner />;
@@ -375,8 +289,8 @@ function GameRoom() {
             {game.player2 === null
                 ? <div> Here is the invite code: {handle} </div>
                 : gameState === true
-                ? <div> Let's Play! It is currently <b>{currentTurn}'s</b> turn!</div>
-                : <div> The other player is asking to End the game. Select '<b>End Game</b>' to confirm the end or continue to place letters and '<b>Submit Turn</b>' to continue playing. </div>
+                    ? <div> Let's Play! It is currently <b>{currentTurn}'s</b> turn!</div>
+                    : <div> The other player is asking to End the game. Select '<b>End Game</b>' to confirm the end or continue to place letters and '<b>Submit Turn</b>' to continue playing. </div>
             }
             <div className="gameBoard">
                 {grid.map((row, rowIndex) => (

@@ -2,7 +2,6 @@
 
 /** Routes for games. */
 
-
 const jsonschema = require("jsonschema");
 
 const { ensureCorrectUserOrAdmin, ensureAdmin } = require("../middleware/auth");
@@ -37,7 +36,7 @@ router.get("/:handle", async function (req, res, next) {
 router.get("/:handle/draw/:count", async function (req, res, next) {
   try {
     const { count } = req.params;
-    const deck = pool.getLetters();    
+    const deck = pool.getLetters();
     let num = 0;
     if (deck) {
       const drawn = [];
@@ -50,9 +49,8 @@ router.get("/:handle/draw/:count", async function (req, res, next) {
         }
       }
       num = deck.letters.length
-      console.log(deck.letters.length);
       pool.returnLetters(deck);
-      return res.json({ cards: drawn , num: num });
+      return res.json({ cards: drawn, num: num });
     }
   } catch (err) {
     return next(err);
@@ -72,14 +70,13 @@ router.get("/:handle/draw/:count", async function (req, res, next) {
 
 router.post("/:handle/user/:username", ensureCorrectUserOrAdmin, async function (req, res, next) {
   try {
-    const deck = pool.getLetters();
     const validator = jsonschema.validate(req.body, gameNewSchema);
     if (!validator.valid) {
       const errs = validator.errors.map(e => e.stack);
       throw new BadRequestError(errs);
     }
     const game = await Game.create(req.body);
-
+    const deck = pool.getLetters();
     deck.shuffle();
     pool.returnLetters(deck);
 
@@ -99,7 +96,6 @@ router.post("/:handle/user/:username", ensureCorrectUserOrAdmin, async function 
 router.patch("/:handle/user/:username/:points", ensureCorrectUserOrAdmin, async function (req, res, next) {
   try {
     const game = await Game.addPoints(req.params.handle, req.params.username, req.params.points)
-    //const token = createToken(game);
     return res.status(201).json({ game });
   } catch (err) {
     return next(err);
@@ -123,7 +119,7 @@ router.patch("/:handle/join/:username", ensureCorrectUserOrAdmin, async function
       } else {
         break;
       }
-    } 
+    }
     pool.returnLetters(deck);
 
     return res.status(201).json({ game, letters: drawn })

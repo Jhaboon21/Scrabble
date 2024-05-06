@@ -22,6 +22,7 @@ function LoginForm({ login }) {
       }
     } catch (err) {
       setFormErrors(err);
+      alert('Username/Password was incorrect.');
     }
   }
 
@@ -39,8 +40,9 @@ function LoginForm({ login }) {
           <div className="card-body">
             <form onSubmit={handleSubmit}>
               <div className="form-group">
-                <label>Username</label>
+                <label htmlFor="username">Username</label>
                 <input
+                  id="username"
                   name="username"
                   className="form-control"
                   value={formData.username}
@@ -50,8 +52,9 @@ function LoginForm({ login }) {
                 />
               </div>
               <div className="form-group">
-                <label>Password</label>
+                <label htmlFor="password">Password</label>
                 <input
+                  id="password"
                   type="password"
                   name="password"
                   className="form-control"

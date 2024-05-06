@@ -23,12 +23,15 @@ exports[`matches snapshot 1`] = `
             <div
               class="form-group"
             >
-              <label>
+              <label
+                for="username"
+              >
                 Username
               </label>
               <input
                 autocomplete="username"
                 class="form-control"
+                id="username"
                 name="username"
                 required=""
                 value=""
@@ -37,12 +40,15 @@ exports[`matches snapshot 1`] = `
             <div
               class="form-group"
             >
-              <label>
+              <label
+                for="password"
+              >
                 Password
               </label>
               <input
                 autocomplete="current-password"
                 class="form-control"
+                id="password"
                 name="password"
                 required=""
                 type="password"

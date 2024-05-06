@@ -92,9 +92,7 @@ class Game {
             newPoints = addPlayer1.rows[0].player1score + Number(points);
         }
         
-        console.log(newPoints)
         if (!addPlayer1.rows[0]) {
-            console.log('second check');
             const addPlayer2 = await db.query(
                 `SELECT player2Score
                 FROM games
@@ -104,9 +102,7 @@ class Game {
             );
             
             newPoints = addPlayer2.rows[0].player2score + Number(points);
-            console.log(newPoints)
         }
-        console.log(newPoints)
         
         const result = await db.query(
             `UPDATE games

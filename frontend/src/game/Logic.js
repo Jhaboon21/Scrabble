@@ -1,127 +1,89 @@
-import React, { useContext} from "react";
-import UserContext from "../routes/auth/UserContext";
 import ScrabbleAPI from "../api/api";
 
-/** Game logic
- * determine whose turn it is and when they can play letters
- * tally points and give to player
- */
-function Logic(player1, player2) {
-    const {currentUser} = useContext(UserContext);
+// Traverse through grid to form words based on the words placed
+function findWords(grid, playedLetters) {
+    // Sort the played letters by row and column to ensure they are in order
+    playedLetters.sort((a, b) => a.row - b.row || a.col - b.col);
 
-    let board = null;
-    let boardLetters = [];
-    let lettersToBePlayed = [];
+    // Helper function to search for words horizontally
+    const searchHorizontal = (row, col) => {
+        let word = '';
 
-    let currentTurn = player1;
-    let player1Letters = [];
-    let player2Letters = [];
-    let totalLetters = [
-        "A","A","A","A","A","A","A","A","A",
-        "B","B",
-        "C","C",
-        "D","D","D","D",
-        "E","E","E","E","E","E","E","E","E","E","E","E",
-        "F","F",
-        "G","G","G",
-        "H","H",
-        "I","I","I","I","I","I","I","I","I",
-        "J",
-        "K",
-        "L","L","L","L",
-        "M","M",
-        "N","N","N","N","N","N",
-        "O","O","O","O","O","O","O","O",
-        "P","P",
-        "Q",
-        "R","R","R","R","R","R",
-        "S","S","S","S",
-        "T","T","T","T","T","T",
-        "U","U","U","U",
-        "V","V",
-        "W","W",
-        "X",
-        "Y","Y",
-        "Z"
-    ];
-
-    if (currentTurn != currentUser) return //Not Your Turn!
-
-    // shuffle the "bag of letters" 
-    function shuffle(array) {
-        let currentIndex = array.length;
-
-        while (currentIndex != 0) {
-            let randomIndex = Math.floor(Math.random() * currentIndex);
-            currentIndex--;
-            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        // Search left from current position
+        for (let i = Number(col); i >= 0 && grid[row][i].letter !== ''; i--) {
+            word = grid[row][i].letter + word;
         }
-    }
-    shuffle(totalLetters);
 
-    // then distribute letters to players. 
-    // This should happen at the beginning of a player's every turn.
-    function drawLetters(playerLetters) {
-        while (playerLetters.length < 7 && totalLetters > 0) {
-            let i = 7 - playerLetters.length;
-            playerLetters = totalLetters.splice(0,i)
+        // Search left from current position
+        for (let i = Number(col) + 1; i < grid[row].length && grid[row][i].letter !== ''; i++) {
+            word += grid[row][i].letter;
         }
+
+        return word;
     }
-    // if (currentTurn == player1) drawLetters(player1Letters);
-    // if (currentTurn == player2) drawLetters(player2Letters);
 
-    // check if the word is valid, then tally points and give to player
-    // async function checkWord(await ScrabbleAPI.validateWord(word))
-    // if valid, currentUser.points += tallypoints
+    // Helper function to search for words vertically
+    const searchVertical = (row, col) => {
+        let word = '';
 
-
-    // determine what words are valid and calculate points
-    async function findWordsAndPoints() {
-        let words = [];
-        let pointSum = 0;
-
-        for (let i = 0; i < lettersToBePlayed.length; i++) {
-            let cur = lettersToBePlayed[i];
-
-            // horizontal words
-            let h = cur;
-            while (boardLetters[h-1] !== "" && (h%15) > 0) {
-                h -= 1;
-            }
-            let word = boardLetters[h];
-            //let points = pointsPerLetter[boardLetters[h]];
-            h++;
-            while (boardLetters[h] !== "" && (h%15) !== 0) {
-                word = word.concat(boardLetters[h]);
-                //points += pointsPerLetter[boardLetters[h]];
-                h += 1;
-            }
-            if (word.length > 1 && words.indexOf(word) === -1) {
-                words.push(word);
-                //pointSum += points;
-                pointSum += await ScrabbleAPI.scrabbleScore(word);
-            }
-
-            // vertical words
-            let v = cur;
-            while (boardLetters[v-15] !== "" && v > 14) {
-                v -= 15;
-            }
-            word = "";
-            //points = 0;
-            while (boardLetters[v] !== "" && v < 225) {
-                word = word.concat(boardLetters[v]);
-                //points += pointsPerLetter[boardLetters[v]];
-                v += 15;
-            }
-            if (word.length > 1 && words.indexOf(word) === -1) {
-                words.push(word);
-                //pointSum += points;
-                pointSum += await ScrabbleAPI.scrabbleScore(word);
-            }
+        // Search up from current position
+        for (let i = Number(row); i >= 0 && grid[i][col].letter !== ''; i--) {
+            word = grid[i][col].letter + word;
         }
-        return [words, pointSum];
+
+        // Search down from current position
+        for (let j = Number(row) + 1; j < grid.length && grid[j][col].letter !== ''; j++) {
+            word += grid[j][col].letter;
+        }
+        return word;
     }
+    const words = [];
+
+    // Check horizontally and vertically
+    playedLetters.forEach(({ row, col }) => {
+        const hWords = searchHorizontal(row, col);
+        const vWords = searchVertical(row, col);
+
+        // if the words are longer than 1 letter and not already pushed into list of words, push into list of words.
+        if (hWords !== '' && hWords.length > 1 && !words.includes(hWords.toLowerCase())) {
+            words.push(hWords.toLowerCase());
+        }
+        if (vWords !== '' && vWords.length > 1 && !words.includes(vWords.toLowerCase())) {
+            words.push(vWords.toLowerCase());
+        }
+    })
+    return words;
 }
 
-export default Logic;
+// Handle validating the word and getting the points from the api for the word.
+async function getPoints(arr) {
+    if (arr.length === 0) throw new Error(`You must place at least 2 letters and form a word.`);
+    let score = 0;
+    for (let i = 0; i < arr.length; i++) {
+        try {
+            let res = await ScrabbleAPI.scrabbleScore(arr[i]);
+            score += res.data.value;
+        } catch (error) {
+            throw new Error(`The word ${arr[i]} is not valid.`);
+        }
+    }
+    return score;
+}
+
+// The game is finished so we should declare the winner and hide the turn buttons.
+function winner(msg) {
+    if (msg === 'tie') {
+        alert('It is a tie!');
+        let ele = document.querySelectorAll('.player_score_container');
+        ele.forEach(e => e.classList.toggle('winner'));
+    } else {
+        alert(`The winner is: ${msg}!!!`);
+        let ele = document.querySelector(`#${msg}`);
+        ele.classList.toggle('winner');
+    }
+
+    let turnEle = document.querySelector('.turn_container');
+    turnEle.classList.toggle('hidden')
+}
+
+export {findWords, getPoints, winner};

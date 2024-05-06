@@ -31,7 +31,7 @@ exports[`matches snapshot 1`] = `
           class="nav-link"
           href="/"
         >
-          Log Out testfirst
+          Log Out John
         </a>
       </li>
     </ul>

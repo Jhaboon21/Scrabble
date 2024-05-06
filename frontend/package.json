@@ -15,7 +15,7 @@
   "scripts": {
     "start": "react-scripts --openssl-legacy-provider start",
     "build": "react-scripts build",
-    "test": "react-scripts test --transformIgnorePatterns 'node_modules/(?!axios)/'",
+    "test": "react-scripts test --transformIgnorePatterns 'node_modules/(?!axios)/' --env=jest-environment-jsdom-sixteen",
     "eject": "react-scripts eject"
   },
   "proxy": "http://localhost:3001",
@@ -39,6 +39,7 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^12.1.2",
-    "@types/jquery": "^3.5.29"
+    "@types/jquery": "^3.5.29",
+    "jest-environment-jsdom-sixteen": "^2.0.0"
   }
 }

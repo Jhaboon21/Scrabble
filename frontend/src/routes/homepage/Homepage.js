@@ -64,8 +64,9 @@ function Homepage({joinRoom, createGame}) {
                 Start a Game!
               </button>
               <form onSubmit={handleSubmit} className="invite-form">
-                <label>Enter Invite Code</label>
+                <label htmlFor="handle">Enter Invite Code</label>
                 <input 
+                  id="handle"
                   name="handle"
                   className="form-control"
                   value={formData.handle}
