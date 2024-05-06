@@ -7,7 +7,7 @@ The back-end will handle the user related operations and as well as the game dat
 
 In the project directory for the backend, run:
 
-### psql < scrabble.sql
+### `psql < scrabble.sql`
 This will create the database on your local machine, 
 then run:
 
