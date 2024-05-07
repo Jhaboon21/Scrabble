@@ -13,7 +13,6 @@ export const TOKEN_STORAGE_ID = "scrabble-token";
 
 function App() {
   const [isLoaded, setIsLoaded] = useState(false);
-  // const [isPlaying, setIsPlaying] = useState(false);
   const [currUser, setCurrUser] = useState(null);
   const [token, setToken] = useLocalStorage(TOKEN_STORAGE_ID);
 
