@@ -1,4 +1,4 @@
-# Scrabble Game
+# [Scrabble Game](https://scrabble-e3rs.onrender.com) <- Deploy link
 This is an application made with JavaScript, React, Node, HTML, CSS, Express, WebSockets, Restful API. The API I used is: https://developer.wordnik.com/ which was used to get the value of the created words from the user and add points to their score.
 The game can be played by first logging in or creating an account, then creating a game room and sharing the unique code with another user. The code will allow them to join the room and the two users can play a game of scrabble.
 The back-end will handle the user related operations and as well as the game data, such as the room's id, player 1, player 2, and their respective scores. The front-end handles the user experience and how they can interact with the game and can communicate with the other player by sending messages/data using WebSockets
