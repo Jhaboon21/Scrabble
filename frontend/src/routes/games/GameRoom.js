@@ -28,7 +28,6 @@ function GameRoom() {
 
     // display the player's letters
     function displayLetters(arr) {
-        console.log(arr);
         return (
             <ul className="player_letters">
                 {arr.map((val, index) => <li className="tiles" key={index} onClick={handleTile} value={val}>{val}</li>)}
