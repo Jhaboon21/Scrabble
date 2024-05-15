@@ -22,7 +22,8 @@ function GameRoom() {
     const [placedLetters, setPlacedLetters] = useState([]);
     const [lettersLeft, setLettersLeft] = useState(null);
     const [grid, setGrid] = useState(BuildBoard());
-    const ws = useWebSocket('ws://localhost:3001')
+    // const ws = useWebSocket('ws://localhost:3001')
+    const ws = useWebSocket('wss://scrabble-backend-vqax.onrender.com')
     const [gameState, setGameState] = useState(true); // true is active, false is game over.
 
     // display the player's letters
