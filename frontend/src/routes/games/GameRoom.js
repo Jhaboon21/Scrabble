@@ -236,6 +236,7 @@ function GameRoom() {
             setPlayerLetters(letters.cards);
             setLettersLeft(letters.num);
             setGame(game);
+            if (currentUser.username === game.player2) setCurrentTurn(game.player1);
         }
         getGameRoom();
     }, [handle]);
