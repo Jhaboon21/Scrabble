@@ -38,7 +38,7 @@ class ScrabbleAPI {
         try {
             return (
                 await axios({
-                    url: `https://api.wordnik.com/v4/word.json/${endpoint}?api_key=${ScrabbleAPI.API_KEY}`,
+                    url: `https://api.wordnik.com/v4/word.json/${endpoint}?api_key=${API_KEY}`,
                     method,
                     [method === "get" ? "params" : "data"]: data,
                 })
