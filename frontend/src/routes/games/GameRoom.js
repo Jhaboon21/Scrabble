@@ -22,7 +22,6 @@ function GameRoom() {
     const [placedLetters, setPlacedLetters] = useState([]);
     const [lettersLeft, setLettersLeft] = useState(null);
     const [grid, setGrid] = useState(BuildBoard());
-    // const ws = useWebSocket('ws://localhost:3001')
     const ws = useWebSocket('wss://scrabble-backend-vqax.onrender.com')
     const [gameState, setGameState] = useState(true); // true is active, false is game over.
 
@@ -153,7 +152,6 @@ function GameRoom() {
                 type: 'grid',
                 content: grid
             }));
-            console.log('message has been sent!')
         } else {
             console.error('WebSocket is not open.')
         }
@@ -200,7 +198,6 @@ function GameRoom() {
                     content: winner
                 }));
             } else { // No one has requested to end yet, so initial request will be sent to other player.
-                console.log('sending a request to other player to end game');
                 setTurn(game)
                 ws.send(JSON.stringify({
                     type: 'end',
@@ -213,14 +210,12 @@ function GameRoom() {
     // determine and set the next player's turn.
     const setTurn = (game) => {
         if (currentTurn === game.player1) {
-            console.log("current turn is player1, now switching to 2");
             ws.send(JSON.stringify({
                 type: 'turn',
                 content: game.player2
             }))
         }
         else if (currentTurn === game.player2) {
-            console.log("current turn is player2, now switching to 1");
             ws.send(JSON.stringify({
                 type: 'turn',
                 content: game.player1
@@ -246,7 +241,6 @@ function GameRoom() {
         switch (message.type) {
             case 'system':
                 // A user has joined and should update the lobby
-                console.log(message.content)
                 const game = await ScrabbleAPI.getGameRoom(handle);
                 setCurrentTurn(game.player1);
                 setGame(game);
