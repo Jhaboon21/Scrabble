@@ -9,6 +9,7 @@ const { createToken } = require("../helpers/tokens");
 const express = require("express");
 const router = express.Router();
 const gameNewSchema = require("../schemas/gameNew.json");
+const User = require("../models/user");
 const Game = require("../models/game");
 const LetterPool = require("../pool/letterPool")
 const { BadRequestError } = require("../expressError");
@@ -80,7 +81,8 @@ router.post("/:handle/user/:username", ensureCorrectUserOrAdmin, async function 
     deck.shuffle();
     pool.returnLetters(deck);
 
-    const token = createToken(game);
+    const user = await User.get(req.params.username);
+    const token = createToken(user);
     return res.status(201).json({ game, token });
   } catch (err) {
     console.log("Error at the .post");
@@ -123,7 +125,8 @@ router.patch("/:handle/join/:username", ensureCorrectUserOrAdmin, async function
     }
     pool.returnLetters(deck);
 
-    const token = createToken(game);
+    const user = await User.get(req.params.username);
+    const token = createToken(user);
     return res.status(201).json({ game, letters: drawn, token })
   } catch (err) {
     return next(err);
