@@ -25,8 +25,6 @@ wss.on('connection', socket => {
 
   socket.on('message', message => {
     // Handle message from clients
-    // console.log('Received message', JSON.parse(message));
-
     handleMessage(JSON.parse(message));
   })
 
