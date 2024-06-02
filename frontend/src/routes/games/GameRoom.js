@@ -226,15 +226,21 @@ function GameRoom() {
     // load game and it's data, set player letters
     useEffect(function loadGameRoom() {
         async function getGameRoom() {
-            const game = await ScrabbleAPI.getGameRoom(handle);
-            let letters = await ScrabbleAPI.drawLetters(handle, 7) // draw 7 letters
-            setPlayerLetters(letters.cards);
-            setLettersLeft(letters.num);
-            setGame(game);
-            if (currentUser.username === game.player2) setCurrentTurn(game.player1);
+            if (currentUser) {
+                try {
+                    const game = await ScrabbleAPI.getGameRoom(handle);
+                    let letters = await ScrabbleAPI.drawLetters(handle, 7) // draw 7 letters
+                    setPlayerLetters(letters.cards);
+                    setLettersLeft(letters.num);
+                    setGame(game);
+                    if (currentUser.username === game.player2) setCurrentTurn(game.player1);
+                } catch (err) {
+                    console.error("Error fetching game", err);
+                }
+            }
         }
         getGameRoom();
-    }, [handle]);
+    }, [currentUser, handle]);
 
     // Handle the different type of messages that the client might receive from the websocket       
     useWebSocketMessage(ws, async (message) => {
