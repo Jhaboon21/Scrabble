@@ -20,11 +20,13 @@ function App() {
     async function getCurrentUser() {
       if (token) {
         try {
+          console.log("Decoding token:", token);
           let { username } = jwt.decode(token);
           ScrabbleAPI.token = token;
-
+          console.log("Fetching current user for username:", username);
           let currUser = await ScrabbleAPI.getCurrentUser(username);
           setCurrUser(currUser);
+          console.log("User fetched successfully:", currUser);
         } catch (err) {
           console.error("problem loading user info", err);
           setCurrUser(null);
@@ -71,8 +73,10 @@ function App() {
 
   async function joinRoom(handle, user, data) {
     try {
+      console.log("Joining room:", handle, user, data);
       let token = await ScrabbleAPI.joinRoom(handle, user, data);
       setToken(token);
+      console.log("Token set after joining room:", token);
       return { success: true };
     } catch (err) {
       console.error("Join Room failed", err);
