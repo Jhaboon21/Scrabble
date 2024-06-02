@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 /** custome hook for using local storage to keep state data updated */
-function useLocalStorage(key, initialValue = null) {
+function useLocalStorage(key, initialValue) {
     const [storedValue, setStoredValue] = useState(() => {
     try {
       const item = window.localStorage.getItem(key);
