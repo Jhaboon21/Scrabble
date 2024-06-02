@@ -61,12 +61,14 @@ class ScrabbleAPI {
     // Get token for login
     static async login(data) {
         let res = await this.requestBackend(`auth/token`, data, "post");
+        ScrabbleAPI.token = res.token;
         return res.token;
     }
 
     // Sign up for the site
     static async signup(data) {
         let res = await this.requestBackend(`auth/register`, data, "post");
+        ScrabbleAPI.token = res.token;
         return res.token;
     }
 
@@ -85,6 +87,7 @@ class ScrabbleAPI {
     // Create a game with the current user as player 1
     static async createGame(handle, username, data) {
         let res = await this.requestBackend(`games/${handle}/user/${username}`, data, "post");
+        ScrabbleAPI.token = res.token;
         return res.token;
     }
 
@@ -103,6 +106,7 @@ class ScrabbleAPI {
     // Join another user's game room
     static async joinRoom(handle, username, data={player2: username}) {
         let res = await this.requestBackend(`games/${handle}/join/${username}`, data, "patch");
+        ScrabbleAPI.token = res.token;
         return res.token;
     }
 
