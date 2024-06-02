@@ -42,6 +42,7 @@ function App() {
   function logout() {
     setCurrUser(null);
     setToken(null);
+    ScrabbleAPI.token = null;
   }
 
   // Handle site-wide signup
