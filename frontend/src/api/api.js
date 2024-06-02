@@ -10,7 +10,8 @@ class ScrabbleAPI {
     // token for interacting with the API will be stored here.
     static token;
     // hardcoded api key for testing
-    static apiKey = "7h54gfi4lua9gj24ze04flf4mb3cbi0pdieaer0qb27us90ek";
+    // static apiKey = "7h54gfi4lua9gj24ze04flf4mb3cbi0pdieaer0qb27us90ek";
+    static apiKey = process.env.API_KEY;
 
     static async requestBackend(endpoint, data = {}, method = "get") {
         console.log("API Call:", endpoint, data, method);
