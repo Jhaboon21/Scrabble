@@ -1,5 +1,6 @@
 import axios from "axios";
 const BASE_URL = process.env.REACT_APP_BASE_URL || "http://localhost:3001";
+const API_KEY = process.env.API_KEY;
 
 /** API Class
  * 
@@ -11,7 +12,6 @@ class ScrabbleAPI {
     static token;
     // hardcoded api key for testing
     // static apiKey = "7h54gfi4lua9gj24ze04flf4mb3cbi0pdieaer0qb27us90ek";
-    static apiKey = process.env.API_KEY;
 
     static async requestBackend(endpoint, data = {}, method = "get") {
         console.log("API Call:", endpoint, data, method);
@@ -38,7 +38,7 @@ class ScrabbleAPI {
         try {
             return (
                 await axios({
-                    url: `https://api.wordnik.com/v4/word.json/${endpoint}?api_key=${ScrabbleAPI.apiKey}`,
+                    url: `https://api.wordnik.com/v4/word.json/${endpoint}?api_key=${ScrabbleAPI.API_KEY}`,
                     method,
                     [method === "get" ? "params" : "data"]: data,
                 })
