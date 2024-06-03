@@ -83,7 +83,7 @@ class ScrabbleAPI {
     // Create a game with the current user as player 1
     static async createGame(handle, username, data) {
         let res = await this.requestBackend(`games/${handle}/user/${username}`, data, "post");
-        return res;
+        return res.token;
     }
 
     // Draw letters from pool
@@ -101,7 +101,7 @@ class ScrabbleAPI {
     // Join another user's game room
     static async joinRoom(handle, username, data={player2: username}) {
         let res = await this.requestBackend(`games/${handle}/join/${username}`, data, "patch");
-        return res;
+        return res.token;
     }
 
     // Get Scrabble score of the word
