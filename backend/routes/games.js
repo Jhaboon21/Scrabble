@@ -81,7 +81,9 @@ router.post("/:handle/user/:username", ensureCorrectUserOrAdmin, async function 
     deck.shuffle();
     pool.returnLetters(deck);
 
-    return res.status(201).json({ game });
+    const user = await User.get(req.params.username);
+    const token = createToken(user);
+    return res.status(201).json({ game, token });
   } catch (err) {
     console.log("Error at the .post");
     return next(err);
@@ -123,7 +125,9 @@ router.patch("/:handle/join/:username", ensureCorrectUserOrAdmin, async function
     }
     pool.returnLetters(deck);
 
-    return res.status(201).json({ game, letters: drawn })
+    const user = await User.get(req.params.username);
+    const token = createToken(user);
+    return res.status(201).json({ game, letters: drawn, token })
   } catch (err) {
     return next(err);
   }
