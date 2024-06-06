@@ -229,8 +229,6 @@ function GameRoom() {
             if (currentUser) {
                 try {
                     const game = await ScrabbleAPI.getGameRoom(handle);
-                    console.log("letters length")
-                    console.log(playerLetters.length)
                     let letters = await ScrabbleAPI.drawLetters(handle, 7 - playerLetters.length) // draw 7 letters
                     setPlayerLetters(letters.cards);
                     setLettersLeft(letters.num);
