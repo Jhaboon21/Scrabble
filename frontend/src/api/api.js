@@ -12,8 +12,6 @@ class ScrabbleAPI {
     static token;
 
     static async requestBackend(endpoint, data = {}, method = "get") {
-        console.log("API Call:", endpoint, data, method);
-
         const headers = { Authorization: `Bearer ${ScrabbleAPI.token}`}
         try {
             return (
@@ -32,7 +30,6 @@ class ScrabbleAPI {
     }
 
     static async requestAPI(endpoint, data = {}, method = "get") {
-        console.log("Wordnik API Call:", endpoint, data, method);
         try {
             return (
                 await axios({
