@@ -74,8 +74,9 @@ function App() {
   async function joinRoom(handle, user, data) {
     try {
       console.log("Joining room:", handle, user, data);
-      let token = await ScrabbleAPI.joinRoom(handle, user, data);
-      setToken(token);
+      // let token = await ScrabbleAPI.joinRoom(handle, user, data);
+      await ScrabbleAPI.joinRoom(handle, user, data);
+      // setToken(token);
       console.log("Token set after joining room:", token);
       return { success: true };
     } catch (err) {
@@ -86,8 +87,9 @@ function App() {
 
   async function createGame(handle, user, data) {
     try {
-      let token = await ScrabbleAPI.createGame(handle, user, data);
-      setToken(token);
+      // let token = await ScrabbleAPI.createGame(handle, user, data);
+      await ScrabbleAPI.createGame(handle, user, data);
+      // setToken(token);
       return { success: true };
     } catch (err) {
       console.error("Create Room failed", err);
