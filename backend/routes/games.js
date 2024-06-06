@@ -112,22 +112,8 @@ router.patch("/:handle/user/:username/:points", ensureCorrectUserOrAdmin, async 
 router.patch("/:handle/join/:username", ensureCorrectUserOrAdmin, async function (req, res, next) {
   try {
     const game = await Game.addSecondPlayer(req.params.handle, req.params.username);
-    // const deck = pool.getLetters();
-
-    // const drawn = [];
-    // for (let i = 0; i < 7; i++) {
-      // const card = deck.drawLetters();
-      // if (card) {
-        // drawn.push(card);
-      // } else {
-        // break;
-      // }
-    // }
-    // pool.returnLetters(deck);
-
     const user = await User.get(req.params.username);
     const token = createToken(user);
-    // return res.status(201).json({ game, letters: drawn, token })
     return res.status(201).json({ game, token });
   } catch (err) {
     return next(err);
